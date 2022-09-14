@@ -1,0 +1,14 @@
+host: "localhost" # default localhost
+port: 9123 # default 9123
+states:
+  simple:
+    default: "foo" # default value
+  complex:
+    default: "bye"
+    initial: "echo replaced" # execute after parse the yaml config and store the result
+    get: 'echo "state: %s"' # execute when get state and send the result
+    set: "echo %s | tr a-z A-Z" # execute when set state and store the result
+    onget: # execute when get state
+      - "notify-send sate-get %s"
+    onset: # execute when set state
+      - "notify-send sate-set %s"

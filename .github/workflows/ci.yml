@@ -1,0 +1,70 @@
+name: Build (CI)
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  builds:
+    name: Build
+    permissions:
+      contents: write
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.19.1"
+
+      - name: Install Musl
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: Build
+        run: |
+          CGO_ENABLED=1 CC=musl-gcc go build --ldflags "-linkmode external -extldflags=-static -X main.VERSION=CI-$(date '+%Y-%m-%d')-$(git rev-parse --short HEAD)"
+
+      - name: Save Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: files
+          path: |
+            sate
+
+  release:
+    name: Release
+    runs-on: ubuntu-20.04
+    needs:
+      - builds
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: files
+          path: files
+
+      - name: Create Body Release
+        run: |
+          echo "BUILD: $(date '+%Y-%m-%d')" > body.md
+          echo "COMMIT: $(git rev-parse --short HEAD)" >> body.md
+
+      - name: Create Release and Upload Artifacts
+        uses: ncipollo/release-action@v1.10.0
+        with:
+          name: Build (CI)
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          prerelease: true
+          tag: build-ci
+          bodyFile: body.md
+          artifacts: files/**/*
