@@ -18,12 +18,13 @@ import (
 )
 
 type State struct {
-	Default string
-	Initial string
-	Get     string
-	Set     string
-	Onget   []string
-	Onset   []string
+	Default  string
+	Initial  string
+	Get      string
+	Set      string
+	Onget    []string
+	Onset    []string
+	Dispatch map[string]string
 }
 
 type Config struct {
@@ -76,6 +77,16 @@ func main() {
 	setValue := set.StringPositional(&argparse.Options{
 		Required: true,
 		Help:     "value",
+	})
+
+	dispatch := root.NewCommand("dispatch", "Dispatch state")
+	dispatchKey := dispatch.StringPositional(&argparse.Options{
+		Required: true,
+		Help:     "key",
+	})
+	dispatchName := dispatch.StringPositional(&argparse.Options{
+		Required: true,
+		Help:     "dispatch name",
 	})
 
 	watch := root.NewCommand("watch", "Watch state")
@@ -167,6 +178,21 @@ func main() {
 		defer client.Close()
 
 		client.Write([]byte("set\n" + *setKey + "\n" + *setValue))
+
+		buffer := make([]byte, 1024)
+		length, _ := client.Read(buffer)
+		fmt.Println(string(buffer[:length]))
+
+	case dispatch.Happened():
+		if *dispatchKey == "" || *dispatchName == "" {
+			fmt.Print(root.Usage(nil))
+			return
+		}
+
+		client := client(config.Host, config.Port)
+		defer client.Close()
+
+		client.Write([]byte("dispatch\n" + *dispatchKey + "\n" + *dispatchName))
 
 		buffer := make([]byte, 1024)
 		length, _ := client.Read(buffer)
@@ -364,6 +390,35 @@ MESSAGE_LOOP:
 					}
 				} else {
 					client.conn.Write([]byte("nil"))
+				}
+
+			case "dispatch":
+				state, ok := config.States[message[1]]
+				messageBack := []byte("nil")
+
+				if ok {
+					command, ok := state.Dispatch[message[2]]
+					if ok {
+						command := SaveStringf(command, state.Default)
+						out, err := exec.Command("sh", "-c", command).Output()
+
+						if err != nil {
+							log.Print("COMMAND SET ERROR: ", command)
+							log.Print("COMMAND SET ERROR: ", err)
+							messageBack = []byte("ERROR: " + SaveStringf(state.Get, state.Default))
+						} else {
+							messageBack = removeLastNewLine(out)
+							state.Default = string(messageBack)
+						}
+					}
+				}
+
+				client.conn.Write(messageBack)
+
+				for _, item := range clients {
+					if item.watch == message[1] {
+						item.conn.Write([]byte(state.Default))
+					}
 				}
 
 			case "watch":

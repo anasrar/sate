@@ -12,3 +12,8 @@ states:
       - "notify-send sate-get %s"
     onset: # execute when set state
       - "notify-send sate-set %s"
+  counter:
+    default: "23"
+    dispatch:
+      increases: "echo $((%s+1))"
+      decreases: "echo $((%s-1))"

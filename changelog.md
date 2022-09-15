@@ -1,13 +1,14 @@
-# Initial release
+# Release note
 
 ## Add
 
--   dummy
+-   Dispatch command.
+-   Support value with space.
 
 ## Fix
 
--   dummy
+-   None.
 
 ## Other
 
--   dummy
+-   None.

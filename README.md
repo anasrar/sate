@@ -24,6 +24,11 @@ states:
             - "notify-send sate-get %s"
         onset: # execute when set state
             - "notify-send sate-set %s"
+    counter:
+        default: "23"
+        dispatch:
+            increases: "echo $((%s+1))"
+            decreases: "echo $((%s-1))"
 ```
 
 ### Start server
@@ -49,6 +54,12 @@ sate get "simple"
 sate set "complex" "uppercase"
 ```
 
+### Dispatch state
+
+```bash
+sate dispatch "counter" "increases"
+```
+
 ### Watch state changes
 
 ```bash
@@ -58,7 +69,7 @@ sate watch "simple"
 ## TODO
 
 -   [ ] Hot reload config.
--   [ ] Dispatch command.
+-   [x] Dispatch command.
 -   [x] Support space value.
 
 ## Contribute
