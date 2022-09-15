@@ -151,7 +151,7 @@ func main() {
 		client := client(config.Host, config.Port)
 		defer client.Close()
 
-		client.Write([]byte("get " + *getKey))
+		client.Write([]byte("get\n" + *getKey))
 
 		buffer := make([]byte, 1024)
 		length, _ := client.Read(buffer)
@@ -166,7 +166,7 @@ func main() {
 		client := client(config.Host, config.Port)
 		defer client.Close()
 
-		client.Write([]byte("set " + *setKey + " " + *setValue))
+		client.Write([]byte("set\n" + *setKey + "\n" + *setValue))
 
 		buffer := make([]byte, 1024)
 		length, _ := client.Read(buffer)
@@ -181,7 +181,7 @@ func main() {
 		client := client(config.Host, config.Port)
 		defer client.Close()
 
-		client.Write([]byte("watch " + *watchKey))
+		client.Write([]byte("watch\n" + *watchKey))
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -277,7 +277,7 @@ func serverHandleRequest(config *Config, server net.Listener, clients map[string
 MESSAGE_LOOP:
 	for {
 		length, err := data.Read(buffer)
-		message := strings.Split(string(buffer[:length]), " ")
+		message := strings.Split(string(buffer[:length]), "\n")
 
 		switch err {
 		case io.EOF:
