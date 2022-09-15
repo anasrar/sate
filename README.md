@@ -59,7 +59,7 @@ sate watch "simple"
 
 -   [ ] Hot reload config.
 -   [ ] Dispatch command.
--   [ ] Support space value.
+-   [x] Support space value.
 
 ## Contribute
 
