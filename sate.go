@@ -395,12 +395,14 @@ MESSAGE_LOOP:
 			case "dispatch":
 				state, ok := config.States[message[1]]
 				messageBack := []byte("nil")
+				callback := true
 
 				if ok {
 					command, ok := state.Dispatch[message[2]]
 					if ok {
 						command := SaveStringf(command, state.Default)
 						out, err := exec.Command("sh", "-c", command).Output()
+						callback = err == nil
 
 						if err != nil {
 							log.Print("COMMAND SET ERROR: ", command)
@@ -418,6 +420,15 @@ MESSAGE_LOOP:
 				for _, item := range clients {
 					if item.watch == message[1] {
 						item.conn.Write([]byte(state.Default))
+					}
+				}
+
+				if callback {
+					for _, command := range state.Onset {
+						if err := exec.Command("sh", "-c", SaveStringf(command, state.Default)).Run(); err != nil {
+							log.Print("STATE ON SET ERROR: ", command)
+							log.Print("STATE ON SET ERROR: ", err)
+						}
 					}
 				}
 
