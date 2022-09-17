@@ -30,7 +30,7 @@ jobs:
 
       - name: Build
         run: |
-          CGO_ENABLED=1 CC=musl-gcc go build --ldflags "-linkmode external -extldflags=-static -X main.VERSION=${{ inputs.version }}-$(git rev-parse --short HEAD)"
+          CGO_ENABLED=1 CC=musl-gcc go build --ldflags "-linkmode external -extldflags=-static -s -w -X main.VERSION=${{ inputs.version }}-$(git rev-parse --short HEAD)"
 
       - name: Save Artifact
         uses: actions/upload-artifact@v2
